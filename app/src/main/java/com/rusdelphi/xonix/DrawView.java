@@ -1,0 +1,65 @@
+package com.rusdelphi.xonix;
+
+import android.content.Context;
+import android.graphics.Color;
+import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+
+
+public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
+    private DrawThread drawThread;
+    private QuadrateItem[][] matrixField = new QuadrateItem[40][20];
+
+    public DrawView(Context context) {
+        super(context);
+        getHolder().addCallback(this);
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width,
+                               int height) {
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        int indent = 5;
+        int side = (getWidth() / 40) - indent;
+        Log.d("DrawView", "side=" + side);
+        int startY = (getHeight() - (side + indent) * 20) / 2;
+        int startX = 5;
+        int i, j;
+
+
+        for (i = 0; i < 40; i++)
+            for (j = 0; j < 20; j++) {
+                //  Log.d("DrawView", "i=" + i + " j=" + j);
+                int x1 = startX + side * i + indent * i;
+                int y1 = startY + side * j + indent * j;
+                int x2 = startX + side * i + side + indent * i;
+                int y2 = startY + side * j + side + indent * j;
+                if (i == 0 || i == 39 || j == 0 || j == 19)
+                    matrixField[i][j] = new QuadrateItem(x1, y1, x2, y2, Color.BLUE);
+                else
+                    matrixField[i][j] = new QuadrateItem(x1, y1, x2, y2, Color.TRANSPARENT);
+            }
+
+
+        drawThread = new DrawThread(getHolder(), getResources(), matrixField);
+        drawThread.setRunning(true);
+        drawThread.start();
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        boolean retry = true;
+        drawThread.setRunning(false);
+        while (retry) {
+            try {
+                drawThread.join();
+                retry = false;
+            } catch (InterruptedException e) {
+            }
+        }
+    }
+}
