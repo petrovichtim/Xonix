@@ -112,7 +112,7 @@ public class DrawThread extends Thread {
             // ����������� �������� �������
             long now = System.currentTimeMillis();
             long elapsedTime = now - prevTime;
-            if (elapsedTime > 1000) {
+            if (elapsedTime > 100) {
 
                 prevTime = now;
                 //matrix.preRotate(2.0f, picture.getWidth() / 2, picture.getHeight() / 2);
@@ -142,9 +142,8 @@ public class DrawThread extends Thread {
                 if (matrixField[playerX][playerY].color != Color.BLUE)
                     playerPath.add(new int[]{playerX, playerY});
 
-                // если  путь больше двух, то заполняем матрицу
+                // если  путь больше двух, то заполняем путь
                 if (playerPath.size() > 1) {
-                    //int lastXY[] = playerPath.get(playerPath.size() - 1);
                     if (matrixField[playerX][playerY].color == Color.BLUE) {
                         // закрашиваем  путь
                         for (int[] p : playerPath)
@@ -174,14 +173,20 @@ public class DrawThread extends Thread {
                 synchronized (surfaceHolder) {
                     if (canvas != null) {
                         canvas.drawColor(Color.BLACK); // очистка холста
-
+                        complete = 0;
 
                         int i, j;
                         for (i = 0; i < 40; i++) // рисуем рамку
-                            for (j = 0; j < 20; j++) { // ������ ���
+                            for (j = 0; j < 20; j++) {
+                                // выводим квадраты
                                 drawRect(canvas, matrixField[i][j]);
+                                // считаем процент закрашенных
+                                if (matrixField[i][j].color == Color.BLUE)
+                                    complete++;
+
                             }
-                        String info = "Lives:" + lives + " Level:" + level + " (" + complete + "/80)";// ������ ������� ����� ������
+
+                        String info = "Lives:" + lives + " Level:" + level + " (" + Math.round(((double) (complete - 116) / 784) * 100) + "/80)";// ������ ������� ����� ������
                         canvas.drawText(info, 5, 40, textPaint);
                         // рисуем  путь
                         for (int[] p : playerPath) {
