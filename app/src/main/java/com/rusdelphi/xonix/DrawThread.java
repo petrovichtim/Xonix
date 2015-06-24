@@ -9,6 +9,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
@@ -89,6 +90,7 @@ public class DrawThread extends Thread {
         // позиция игрока
         int playerX = 0;
         int playerY = 0;
+
         // позиция  монстра
         int monsterX = randInt(0, 39);
         int monsterY = randInt(0, 19);
@@ -97,6 +99,7 @@ public class DrawThread extends Thread {
         int deltaY = 1;
         // траектория  игрока
         ArrayList<int[]> playerPath = new ArrayList<>();
+        //playerPath.add(new int[]{playerX, playerY});
 
         QuadrateItem player = new QuadrateItem(matrixField[playerX][playerY]);
         player.color = Color.GREEN;
@@ -117,30 +120,40 @@ public class DrawThread extends Thread {
                     playerX += 1;
                     if (playerX > 39)
                         playerX = 39;
-                    else playerPath.add(new int[]{playerX, playerY});
                 }
                 if (playerDirection.equals("left")) {
                     playerX -= 1;
                     if (playerX < 0)
                         playerX = 0;
-                    else playerPath.add(new int[]{playerX, playerY});
                 }
                 if (playerDirection.equals("down")) {
                     playerY += 1;
                     if (playerY > 19)
                         playerY = 19;
-                    else playerPath.add(new int[]{playerX, playerY});
+
                 }
                 if (playerDirection.equals("up")) {
                     playerY -= 1;
                     if (playerY < 0)
                         playerY = 0;
-                    else playerPath.add(new int[]{playerX, playerY});
                 }
+                // если следующий шаг по пустому полю, то начинаем запись
 
+                if (matrixField[playerX][playerY].color != Color.BLUE)
+                    playerPath.add(new int[]{playerX, playerY});
 
+                // если  путь больше двух, то заполняем матрицу
+                if (playerPath.size() > 1) {
+                    //int lastXY[] = playerPath.get(playerPath.size() - 1);
+                    if (matrixField[playerX][playerY].color == Color.BLUE) {
+                        // закрашиваем  путь
+                        for (int[] p : playerPath)
+                            matrixField[p[0]][p[1]].color = Color.BLUE;
+                        playerPath.clear();
+                    }
+                }
                 Log.d("run", "playerX=" + playerX + " playerY=" + playerY);
-                //  Log.d("run", "playerPath=" + playerPath.toArray(new String[]));
+                Log.d("run", "playerPath=" + TextUtils.join(";", playerPath));
 
                 player = new QuadrateItem(matrixField[playerX][playerY]);
                 player.color = Color.GREEN;
@@ -170,6 +183,12 @@ public class DrawThread extends Thread {
                             }
                         String info = "Lives:" + lives + " Level:" + level + " (" + complete + "/80)";// ������ ������� ����� ������
                         canvas.drawText(info, 5, 40, textPaint);
+                        // рисуем  путь
+                        for (int[] p : playerPath) {
+                            QuadrateItem path = new QuadrateItem(matrixField[p[0]][p[1]]);
+                            path.color = Color.YELLOW;
+                            drawRect(canvas, path);
+                        }
                         //рисуем игрока
                         drawRect(canvas, player);
                         //рисуем монстра
@@ -186,6 +205,7 @@ public class DrawThread extends Thread {
             }
         }
     }
+
 
     public boolean contains(int[] array, int key) {
         Arrays.sort(array);
