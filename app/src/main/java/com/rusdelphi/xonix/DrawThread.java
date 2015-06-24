@@ -9,7 +9,6 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
@@ -152,7 +151,7 @@ public class DrawThread extends Thread {
                     }
                 }
                 Log.d("run", "playerX=" + playerX + " playerY=" + playerY);
-                Log.d("run", "playerPath=" + TextUtils.join(";", playerPath));
+               // Log.d("run", "playerPath=" + TextUtils.join(";", playerPath));
 
                 player = new QuadrateItem(matrixField[playerX][playerY]);
                 player.color = Color.GREEN;
