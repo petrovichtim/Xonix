@@ -12,6 +12,10 @@ import android.graphics.Typeface;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
+
 /**
  * Created by volodya on 22.06.2015.
  */
@@ -25,21 +29,22 @@ public class DrawThread extends Thread {
     int lives = 3;
     int level = 1;
     int complete = 0;
+    static String playerDirection = "up";
+
 
     public DrawThread(SurfaceHolder surfaceHolder, Resources resources, QuadrateItem[][] matrixField) {
         this.surfaceHolder = surfaceHolder;
         this.matrixField = matrixField;
 
-
-        // ��������� ��������, ������� ����� ������������
+        // загружаем картинку, которую будем отрисовывать
         picture = BitmapFactory.decodeResource(resources, R.drawable.stoimost);
 
-        // ��������� ������� �������������� ��� ��������
+        // формируем матрицу преобразований для картинки
         matrix = new Matrix();
         matrix.postScale(3.0f, 3.0f);
         matrix.postTranslate(100.0f, 100.0f);
 
-        // ��������� ������� �����
+        // сохраняем текущее время
         prevTime = System.currentTimeMillis();
     }
 
@@ -60,6 +65,19 @@ public class DrawThread extends Thread {
         canvas.drawRect(myRect, greenPaint);
     }
 
+    public static int randInt(int min, int max) {
+
+        // NOTE: Usually this should be a field rather than a method
+        // variable so that it is not re-seeded every call.
+        Random rand = new Random();
+
+        // nextInt is normally exclusive of the top value,
+        // so add 1 to make it inclusive
+        int randomNum = rand.nextInt((max - min) + 1) + min;
+
+        return randomNum;
+    }
+
     @Override
     public void run() {
         Canvas canvas;
@@ -68,40 +86,73 @@ public class DrawThread extends Thread {
         textPaint.setAntiAlias(true);
         textPaint.setTextSize(40);
         textPaint.setColor(Color.GREEN);
-
+        // позиция игрока
         int playerX = 0;
         int playerY = 0;
+        // позиция  монстра
+        int monsterX = randInt(0, 39);
+        int monsterY = randInt(0, 19);
+        // шаг смещения монстра
+        int deltaX = 1;
+        int deltaY = 1;
+        // траектория  игрока
+        ArrayList<int[]> playerPath = new ArrayList<>();
+
         QuadrateItem player = new QuadrateItem(matrixField[playerX][playerY]);
         player.color = Color.GREEN;
-        String playerDirection = "down";
+
+        QuadrateItem monster = new QuadrateItem(matrixField[monsterX][monsterY]);
+        monster.color = Color.RED;
 
         while (runFlag) {
             // �������� ������� ����� � ��������� ������� � ����������
             // ����������� �������� �������
             long now = System.currentTimeMillis();
             long elapsedTime = now - prevTime;
-            if (elapsedTime > 100) {
+            if (elapsedTime > 1000) {
 
                 prevTime = now;
                 //matrix.preRotate(2.0f, picture.getWidth() / 2, picture.getHeight() / 2);
-                if (playerDirection.equals("right"))
-                    if (playerX >= 0 && playerX < 39) {
-                        playerX += 1;
-                    }
-                if (playerDirection.equals("left"))
-                    if (playerX >= 0 && playerX < 39)
-                        playerX -= 1;
-                if (playerDirection.equals("down"))
-                    if (playerY >= 0 && playerY < 19)
-                        playerY += 1;
-                if (playerDirection.equals("up"))
-                    if (playerY >= 0 && playerY < 19)
-                        playerY -= 1;
+                if (playerDirection.equals("right")) {
+                    playerX += 1;
+                    if (playerX > 39)
+                        playerX = 39;
+                    else playerPath.add(new int[]{playerX, playerY});
+                }
+                if (playerDirection.equals("left")) {
+                    playerX -= 1;
+                    if (playerX < 0)
+                        playerX = 0;
+                    else playerPath.add(new int[]{playerX, playerY});
+                }
+                if (playerDirection.equals("down")) {
+                    playerY += 1;
+                    if (playerY > 19)
+                        playerY = 19;
+                    else playerPath.add(new int[]{playerX, playerY});
+                }
+                if (playerDirection.equals("up")) {
+                    playerY -= 1;
+                    if (playerY < 0)
+                        playerY = 0;
+                    else playerPath.add(new int[]{playerX, playerY});
+                }
+
 
                 Log.d("run", "playerX=" + playerX + " playerY=" + playerY);
+                //  Log.d("run", "playerPath=" + playerPath.toArray(new String[]));
+
                 player = new QuadrateItem(matrixField[playerX][playerY]);
                 player.color = Color.GREEN;
 
+                int monsterPos[] = moveMonster(monsterX, monsterY, deltaX, deltaY);
+                monsterX = monsterPos[0];
+                monsterY = monsterPos[1];
+                deltaX = monsterPos[2];
+                deltaY = monsterPos[3];
+                Log.d("run", "monsterX=" + monsterX + " monsterY=" + monsterY);
+                monster = new QuadrateItem(matrixField[monsterX][monsterY]);
+                monster.color = Color.RED;
             }
             canvas = null;
             try {
@@ -109,17 +160,21 @@ public class DrawThread extends Thread {
                 canvas = surfaceHolder.lockCanvas(null);
                 synchronized (surfaceHolder) {
                     if (canvas != null) {
+                        canvas.drawColor(Color.BLACK); // очистка холста
+
+
                         int i, j;
-                        for (i = 0; i < 40; i++)
+                        for (i = 0; i < 40; i++) // рисуем рамку
                             for (j = 0; j < 20; j++) { // ������ ���
                                 drawRect(canvas, matrixField[i][j]);
                             }
                         String info = "Lives:" + lives + " Level:" + level + " (" + complete + "/80)";// ������ ������� ����� ������
                         canvas.drawText(info, 5, 40, textPaint);
-                        // ������ ������
+                        //рисуем игрока
                         drawRect(canvas, player);
+                        //рисуем монстра
+                        drawRect(canvas, monster);
 
-                        //canvas.drawColor(Color.BLACK);
                         // canvas.drawBitmap(picture, matrix, null);
                     }
                 }
@@ -130,5 +185,41 @@ public class DrawThread extends Thread {
                 }
             }
         }
+    }
+
+    public boolean contains(int[] array, int key) {
+        Arrays.sort(array);
+        return Arrays.binarySearch(array, key) >= 0;
+    }
+
+    private int[] moveMonster(int monsterX, int monsterY, int deltaX, int deltaY) {
+        // проверка на удары об край экрана
+        monsterX += deltaX;
+        if (deltaX > 0) {
+            if //(monsterX >= 38) ||
+                    (matrixField[monsterX + 1][monsterY].color == Color.BLUE) {
+                deltaX *= -1;
+            }
+        } else {
+            if (matrixField[monsterX - 1][monsterY].color == Color.BLUE) {//(monsterX <= 1) {
+                deltaX *= -1;
+            }
+        }
+        monsterY += deltaY;
+        if (deltaY > 0) {
+            if (matrixField[monsterX][monsterY + 1].color == Color.BLUE) {//(monsterY >= 18) {
+                deltaY *= -1;
+            }
+        } else {
+            if (matrixField[monsterX][monsterY - 1].color == Color.BLUE) {//(monsterY <= 1) {
+                deltaY *= -1;
+            }
+        }
+        // проверка на удары об заполненные блоки
+
+
+        int[] pos = {monsterX, monsterY, deltaX, deltaY};
+
+        return pos;
     }
 }

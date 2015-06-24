@@ -3,6 +3,7 @@ package com.rusdelphi.xonix;
 import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -10,6 +11,8 @@ import android.view.SurfaceView;
 public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
     private DrawThread drawThread;
     private QuadrateItem[][] matrixField = new QuadrateItem[40][20];
+    private float x1, x2;
+    private float y1, y2;
 
     public DrawView(Context context) {
         super(context);
@@ -19,6 +22,61 @@ public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                int height) {
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent touchevent) {
+        switch (touchevent.getAction()) {
+            // when user first touches the screen we get x and y coordinate
+            case MotionEvent.ACTION_DOWN: {
+                x1 = touchevent.getX();
+                y1 = touchevent.getY();
+                break;
+            }
+            case MotionEvent.ACTION_UP: {
+                x2 = touchevent.getX();
+                y2 = touchevent.getY();
+                float dx = x2 - x1;
+                float dy = y2 - y1;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    if (dx > 0)
+                        DrawThread.playerDirection = "right";//Log.d("touch", "Left to Right Swap Performed");
+                    if (dx < 0)
+                        DrawThread.playerDirection = "left";
+                    //Log.d("touch", "Right to Left Swap Performed");
+                    //move(1); //right
+                } else {
+                    if (dy > 0)
+                        DrawThread.playerDirection = "down";//Log.d("touch", "UP to Down Swap Performed");
+                    if (dy < 0)
+                        DrawThread.playerDirection = "up";//Log.d("touch", "Down to UP Swap Performed");
+
+                }
+            }
+//                //if left to right sweep event on screen
+//                if (x1 < x2) {
+//                    Log.d("touch", "Left to Right Swap Performed");
+//                }
+//
+//                // if right to left sweep event on screen
+//                if (x1 > x2) {
+//                    Log.d("touch", "Right to Left Swap Performed");
+//                }
+//
+//                // if UP to Down sweep event on screen
+//                if (y1 < y2) {
+//                    Log.d("touch", "UP to Down Swap Performed");
+//                }
+//
+//                //if Down to UP sweep event on screen
+//                if (y1 > y2) {
+//                    Log.d("touch", "Down to UP Swap Performed");
+//                }
+            break;
+
+        }
+
+        return true;//super.onTouchEvent(touchevent);
     }
 
     @Override
