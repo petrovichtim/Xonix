@@ -9,12 +9,12 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.TreeSet;
 
 /**
  * Created by volodya on 22.06.2015.
@@ -106,12 +106,13 @@ public class DrawThread extends Thread {
         QuadrateItem monster = new QuadrateItem(matrixField[monsterX][monsterY]);
         monster.color = Color.RED;
 
+
         while (runFlag) {
             // �������� ������� ����� � ��������� ������� � ����������
             // ����������� �������� �������
             long now = System.currentTimeMillis();
             long elapsedTime = now - prevTime;
-            if (elapsedTime > 100) {
+            if (elapsedTime > 500) {
 
                 prevTime = now;
                 //matrix.preRotate(2.0f, picture.getWidth() / 2, picture.getHeight() / 2);
@@ -144,14 +145,51 @@ public class DrawThread extends Thread {
                 // если  путь больше двух, то заполняем путь
                 if (playerPath.size() > 1) {
                     if (matrixField[playerX][playerY].color == Color.BLUE) {
+                        TreeSet<Integer> columnSet = new TreeSet<>();
+                        TreeSet<Integer> rowSet = new TreeSet<>();
                         // закрашиваем  путь
-                        for (int[] p : playerPath)
+                        for (int[] p : playerPath) {
                             matrixField[p[0]][p[1]].color = Color.BLUE;
+                            // получим высоту траектории
+                            columnSet.add(p[1]);
+                            rowSet.add(p[0]);
+                        }
+//                        for (int col : columnSet) {
+//                            TreeSet<Integer> itemSet = new TreeSet<>();
+//                            for (int[] p : playerPath) {
+//                                if (p[1] == col)
+//                                    itemSet.add(p[0]);
+//                            }
+//                            Log.d("run", "itemSet=" + itemSet);
+//                            if (itemSet.size() == 1) // надо найти крайнюю точку слева или справа
+//                                if (itemSet.first() > rowSet.first())
+//                                    itemSet.add(rowSet.first());
+//                                else
+//                                    itemSet.add(rowSet.last());
+//                           // if (itemSet.size() == 1) // получилась прямая линия, тогда ищем монстра слева или справа и закрашиваем ( снизу)
+//                           //  if  ()
+//                            for (int i = itemSet.first(); i < itemSet.last(); i++)
+//                                matrixField[i][col].color = Color.BLUE;
+//                        }
+//
+//                        Log.d("run", "columnSet=" + columnSet);
+//                        Log.d("run", "rowSet=" + rowSet);
+
                         playerPath.clear();
+                        //тут надо найти белые фигуры и закрасить меньшую
+                        int i, j;
+                        for (i = 0; i < 40; i++) // рисуем рамку
+                            for (j = 0; j < 20; j++) {
+                                if ( matrixField[i][j].color == Color.TRANSPARENT);
+
+
+
+                            }
                     }
                 }
-                Log.d("run", "playerX=" + playerX + " playerY=" + playerY);
-               // Log.d("run", "playerPath=" + TextUtils.join(";", playerPath));
+
+
+                //Log.d("run", "playerX=" + playerX + " playerY=" + playerY);
 
                 player = new QuadrateItem(matrixField[playerX][playerY]);
                 player.color = Color.GREEN;
@@ -161,7 +199,9 @@ public class DrawThread extends Thread {
                 monsterY = monsterPos[1];
                 deltaX = monsterPos[2];
                 deltaY = monsterPos[3];
-                Log.d("run", "monsterX=" + monsterX + " monsterY=" + monsterY);
+
+                // Log.d("run", "monsterX=" + monsterX + " monsterY=" + monsterY);
+
                 monster = new QuadrateItem(matrixField[monsterX][monsterY]);
                 monster.color = Color.RED;
             }
@@ -184,7 +224,7 @@ public class DrawThread extends Thread {
                                     complete++;
 
                             }
-
+                        // рисуем текст
                         String info = "Lives:" + lives + " Level:" + level + " (" + Math.round(((double) (complete - 116) / 784) * 100) + "/80)";// ������ ������� ����� ������
                         canvas.drawText(info, 5, 40, textPaint);
                         // рисуем  путь
@@ -209,15 +249,44 @@ public class DrawThread extends Thread {
             }
         }
     }
+    private  TreeSet<Integer>  getTransparrentArray(int i, int j)
+    {
+        TreeSet<int[]> itemSet = new TreeSet<>();
 
+        itemSet.add(new int[]{i, j});
 
+        if(matrixField[i - 1][j].color == Color.TRANSPARENT) //check if the top box is partially filled
+            recursivefillblank(i - 1, j); //recursively make it blank
+        if(boxes[i][j + 1] == 1) //check if the right box is partially filled
+            recursivefillblank(i, j + 1); //recursively make it blank
+        if(boxes[i + 1][j] == 1) //check if the bottom box is partially filled
+            recursivefillblank(i + 1, j); //recursively make it blank
+        if(boxes[i][j - 1] == 1) //check if the left box is partially filled
+            recursivefillblank(i, j - 1); //recursively make it blank
+
+    }
+
+    private int[]  recursiveFillBlank(int i, int j)
+    {
+        boxes[i][j] = 0; //make the box blank
+
+        if(boxes[i - 1][j] == 1) //check if the top box is partially filled
+            recursivefillblank(i - 1, j); //recursively make it blank
+        if(boxes[i][j + 1] == 1) //check if the right box is partially filled
+            recursivefillblank(i, j + 1); //recursively make it blank
+        if(boxes[i + 1][j] == 1) //check if the bottom box is partially filled
+            recursivefillblank(i + 1, j); //recursively make it blank
+        if(boxes[i][j - 1] == 1) //check if the left box is partially filled
+            recursivefillblank(i, j - 1); //recursively make it blank
+
+    }
     public boolean contains(int[] array, int key) {
         Arrays.sort(array);
         return Arrays.binarySearch(array, key) >= 0;
     }
 
     private int[] moveMonster(int monsterX, int monsterY, int deltaX, int deltaY) {
-        // проверка на удары об край экрана
+        // проверка на удары об край экрана и об заполненные блоки
         monsterX += deltaX;
         if (deltaX > 0) {
             if //(monsterX >= 38) ||
@@ -239,7 +308,6 @@ public class DrawThread extends Thread {
                 deltaY *= -1;
             }
         }
-        // проверка на удары об заполненные блоки
 
 
         int[] pos = {monsterX, monsterY, deltaX, deltaY};
