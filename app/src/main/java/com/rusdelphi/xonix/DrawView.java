@@ -2,7 +2,6 @@ package com.rusdelphi.xonix;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -53,25 +52,6 @@ public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
 
                 }
             }
-//                //if left to right sweep event on screen
-//                if (x1 < x2) {
-//                    Log.d("touch", "Left to Right Swap Performed");
-//                }
-//
-//                // if right to left sweep event on screen
-//                if (x1 > x2) {
-//                    Log.d("touch", "Right to Left Swap Performed");
-//                }
-//
-//                // if UP to Down sweep event on screen
-//                if (y1 < y2) {
-//                    Log.d("touch", "UP to Down Swap Performed");
-//                }
-//
-//                //if Down to UP sweep event on screen
-//                if (y1 > y2) {
-//                    Log.d("touch", "Down to UP Swap Performed");
-//                }
             break;
 
         }
@@ -83,7 +63,7 @@ public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(SurfaceHolder holder) {
         int indent = 5;
         int side = (getWidth() / 40) - indent;
-        Log.d("DrawView", "side=" + side);
+        //Log.d("DrawView", "side=" + side);
         int startY = (getHeight() - (side + indent) * 20) / 2;
         int startX = 5;
         int i, j;
