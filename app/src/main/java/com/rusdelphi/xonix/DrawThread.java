@@ -9,6 +9,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.util.ArrayList;
@@ -30,6 +31,9 @@ public class DrawThread extends Thread {
     int level = 1;
     int complete = 0;
     static String playerDirection = "up";
+    TreeSet<int[]> matrixSet;
+    ArrayList<int[]> zone1 = new ArrayList<>();
+    ArrayList<int[]> zone2 = new ArrayList<>();
 
 
     public DrawThread(SurfaceHolder surfaceHolder, Resources resources, QuadrateItem[][] matrixField) {
@@ -65,6 +69,12 @@ public class DrawThread extends Thread {
         canvas.drawRect(myRect, greenPaint);
     }
 
+    static int[] addElement(int[] a, int e) {
+        a = Arrays.copyOf(a, a.length + 1);
+        a[a.length - 1] = e;
+        return a;
+    }
+
     public static int randInt(int min, int max) {
 
         // NOTE: Usually this should be a field rather than a method
@@ -98,7 +108,7 @@ public class DrawThread extends Thread {
         int deltaY = 1;
         // траектория  игрока
         ArrayList<int[]> playerPath = new ArrayList<>();
-        //playerPath.add(new int[]{playerX, playerY});
+
 
         QuadrateItem player = new QuadrateItem(matrixField[playerX][playerY]);
         player.color = Color.GREEN;
@@ -141,18 +151,38 @@ public class DrawThread extends Thread {
 
                 if (matrixField[playerX][playerY].color != Color.BLUE)
                     playerPath.add(new int[]{playerX, playerY});
-
+                int[] polyX = new int[0], polyY = new int[0];
                 // если  путь больше двух, то заполняем путь
                 if (playerPath.size() > 1) {
                     if (matrixField[playerX][playerY].color == Color.BLUE) {
-                        TreeSet<Integer> columnSet = new TreeSet<>();
-                        TreeSet<Integer> rowSet = new TreeSet<>();
+                        // TreeSet<Integer> columnSet = new TreeSet<>();
+                        // TreeSet<Integer> rowSet = new TreeSet<>();
                         // закрашиваем  путь
                         for (int[] p : playerPath) {
                             matrixField[p[0]][p[1]].color = Color.BLUE;
+                            polyX = addElement(polyX, p[0]);
+                            polyY = addElement(polyY, p[1]);
+
+                            ;// — задаются вершины многоугольника (xPoints[i], yPoints[i]) и их число nPoints
+
+                            // надо собрать 2 зоны
+
+
+                            //тут надо найти белые фигуры и закрасить меньшую
+//                            int i, j;
+//
+//                            List<TreeSet<Integer[]>> ms = new ArrayList<>();
+//                            for (i = 0; i < 40; i++) // рисуем рамку
+//                                for (j = 0; j < 20; j++) {
+//                                    if (matrixField[i][j].color == Color.TRANSPARENT)
+//                                        ms.add(getTransparrentArray(i, j));
+//
+//                                }
+//                            Log.d("run", "ms=" + ms);
+
                             // получим высоту траектории
-                            columnSet.add(p[1]);
-                            rowSet.add(p[0]);
+                            //  columnSet.add(p[1]);
+                            //rowSet.add(p[0]);
                         }
 //                        for (int col : columnSet) {
 //                            TreeSet<Integer> itemSet = new TreeSet<>();
@@ -174,17 +204,25 @@ public class DrawThread extends Thread {
 //
 //                        Log.d("run", "columnSet=" + columnSet);
 //                        Log.d("run", "rowSet=" + rowSet);
+                        //playerPath = new ArrayList<>();
+
 
                         playerPath.clear();
-                        //тут надо найти белые фигуры и закрасить меньшую
+                        Polygon p = new Polygon(polyX, polyY, polyX.length);
+
+
+                        //тут надо найти белые фигуры и закрасить меньшую или меньшие
                         int i, j;
-                        for (i = 0; i < 40; i++) // рисуем рамку
+                        //List<TreeSet<Integer[]>> ms = new ArrayList<>();
+                        for (i = 0; i < 40; i++)
                             for (j = 0; j < 20; j++) {
-                                if ( matrixField[i][j].color == Color.TRANSPARENT);
-
-
+                                if (matrixField[i][j].color == Color.TRANSPARENT && p.contains(i, j))
+                                    matrixField[i][j].color = Color.BLUE;
 
                             }
+                        Log.d("run", "zone1=" + zone1);
+                        Log.d("run", "zone2=" + zone2);
+
                     }
                 }
 
@@ -249,37 +287,119 @@ public class DrawThread extends Thread {
             }
         }
     }
-    private  TreeSet<Integer>  getTransparrentArray(int i, int j)
-    {
-        TreeSet<int[]> itemSet = new TreeSet<>();
 
-        itemSet.add(new int[]{i, j});
+    private void findNeighbours(int i, int j) {
+        if (zone1.isEmpty() && zone2.isEmpty()) {
+            zone1.add(new int[]{i, j});
+            if (matrixField[i - 1][j].color == Color.TRANSPARENT) //check if the top box is partially filled
+            {
+                zone1.add(new int[]{i - 1, j});
+                findNeighbours(i - 1, j);
+            }
+            if (matrixField[i][j + 1].color == Color.TRANSPARENT) //check if the top box is partially filled
+            {
+                zone1.add(new int[]{i, j + 1});
+                findNeighbours(i, j + 1);
+            }
+            if (matrixField[i + 1][j].color == Color.TRANSPARENT) { //check if the top box is partially filled
+                zone1.add(new int[]{i + 1, j});
+                findNeighbours(i + 1, j);
+            }
+            if (matrixField[i][j - 1].color == Color.TRANSPARENT) { //check if the top box is partially filled
+                zone1.add(new int[]{i, j - 1});
+                findNeighbours(i, j - 1);
+            }
+            return;
+        }
+        if (zone1.contains(new int[]{i, j})) {
+            if (matrixField[i - 1][j].color == Color.TRANSPARENT) //check if the top box is partially filled
+            {
+                if (!zone1.contains(new int[]{i - 1, j}))
+                    zone1.add(new int[]{i - 1, j});
+                findNeighbours(i - 1, j);
+            }
+            if (matrixField[i][j + 1].color == Color.TRANSPARENT) //check if the top box is partially filled
+            {
+                if (!zone1.contains(new int[]{i, j + 1}))
+                    zone1.add(new int[]{i, j + 1});
+                findNeighbours(i, j + 1);
+            }
+            if (matrixField[i + 1][j].color == Color.TRANSPARENT) { //check if the top box is partially filled
+                if (!zone1.contains(new int[]{i = 1, j}))
+                    zone1.add(new int[]{i + 1, j});
+                findNeighbours(i + 1, j);
+            }
+            if (matrixField[i][j - 1].color == Color.TRANSPARENT) { //check if the top box is partially filled
+                if (!zone1.contains(new int[]{i, j - 1}))
+                    zone1.add(new int[]{i, j - 1});
+                findNeighbours(i, j - 1);
+            }
+            return;
+        } else {
+            if (!zone2.contains(new int[]{i, j}))
+                zone2.add(new int[]{i, j});
+            if (matrixField[i - 1][j].color == Color.TRANSPARENT) //check if the top box is partially filled
+            {
+                if (!zone2.contains(new int[]{i - 1, j}))
+                    zone2.add(new int[]{i - 1, j});
+                findNeighbours(i - 1, j);
+            }
+            if (matrixField[i][j + 1].color == Color.TRANSPARENT) //check if the top box is partially filled
+            {
+                if (!zone2.contains(new int[]{i, j + 1}))
+                    zone2.add(new int[]{i, j + 1});
+                findNeighbours(i, j + 1);
+            }
+            if (matrixField[i + 1][j].color == Color.TRANSPARENT) { //check if the top box is partially filled
+                if (!zone2.contains(new int[]{i + 1, j}))
+                    zone2.add(new int[]{i + 1, j});
+                findNeighbours(i + 1, j);
+            }
+            if (matrixField[i][j - 1].color == Color.TRANSPARENT) { //check if the top box is partially filled
+                if (!zone2.contains(new int[]{i, j - 1}))
+                    zone2.add(new int[]{i, j - 1});
+                findNeighbours(i, j - 1);
+            }
 
-        if(matrixField[i - 1][j].color == Color.TRANSPARENT) //check if the top box is partially filled
-            recursivefillblank(i - 1, j); //recursively make it blank
-        if(boxes[i][j + 1] == 1) //check if the right box is partially filled
-            recursivefillblank(i, j + 1); //recursively make it blank
-        if(boxes[i + 1][j] == 1) //check if the bottom box is partially filled
-            recursivefillblank(i + 1, j); //recursively make it blank
-        if(boxes[i][j - 1] == 1) //check if the left box is partially filled
-            recursivefillblank(i, j - 1); //recursively make it blank
-
+        }
     }
 
-    private int[]  recursiveFillBlank(int i, int j)
-    {
-        boxes[i][j] = 0; //make the box blank
 
-        if(boxes[i - 1][j] == 1) //check if the top box is partially filled
-            recursivefillblank(i - 1, j); //recursively make it blank
-        if(boxes[i][j + 1] == 1) //check if the right box is partially filled
-            recursivefillblank(i, j + 1); //recursively make it blank
-        if(boxes[i + 1][j] == 1) //check if the bottom box is partially filled
-            recursivefillblank(i + 1, j); //recursively make it blank
-        if(boxes[i][j - 1] == 1) //check if the left box is partially filled
-            recursivefillblank(i, j - 1); //recursively make it blank
+    private TreeSet<Integer[]> getTransparrentArray(int i, int j) {
+        TreeSet<Integer[]> itemSet = new TreeSet<>();
 
+        itemSet.add(new Integer[]{i, j});
+
+        if (matrixField[i - 1][j].color == Color.TRANSPARENT) //check if the top box is partially filled
+            itemSet.addAll(getTransparrentArray(i - 1, j));
+
+        if (matrixField[i][j + 1].color == Color.TRANSPARENT) //check if the top box is partially filled
+            itemSet.addAll(getTransparrentArray(i, j + 1));
+
+        if (matrixField[i + 1][j].color == Color.TRANSPARENT) //check if the top box is partially filled
+            itemSet.addAll(getTransparrentArray(i + 1, j));
+
+        if (matrixField[i][j - 1].color == Color.TRANSPARENT) //check if the top box is partially filled
+            itemSet.addAll(getTransparrentArray(i, j - 1));
+
+
+        return itemSet;
     }
+
+//    private int[] recursiveFillBlank(int i, int j) {
+//        boxes[i][j] = 0; //make the box blank
+//
+//        if (boxes[i - 1][j] == 1) //check if the top box is partially filled
+//            recursivefillblank(i - 1, j); //recursively make it blank
+//        if (boxes[i][j + 1] == 1) //check if the right box is partially filled
+//            recursivefillblank(i, j + 1); //recursively make it blank
+//        if (boxes[i + 1][j] == 1) //check if the bottom box is partially filled
+//            recursivefillblank(i + 1, j); //recursively make it blank
+//        if (boxes[i][j - 1] == 1) //check if the left box is partially filled
+//            recursivefillblank(i, j - 1); //recursively make it blank
+//
+//    }
+
     public boolean contains(int[] array, int key) {
         Arrays.sort(array);
         return Arrays.binarySearch(array, key) >= 0;
