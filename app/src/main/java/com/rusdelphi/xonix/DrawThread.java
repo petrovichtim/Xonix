@@ -14,8 +14,8 @@ import android.view.SurfaceHolder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
-import java.util.TreeSet;
 
 /**
  * Created by volodya on 22.06.2015.
@@ -31,9 +31,9 @@ public class DrawThread extends Thread {
     int level = 1;
     int complete = 0;
     static String playerDirection = "up";
-    TreeSet<int[]> matrixSet;
-    TreeSet<String> zone1 = new TreeSet<>();// = new ArrayList<>();
-    TreeSet<String> zone2 = new TreeSet<>();// = new ArrayList<>();
+    //TreeSet<int[]> matrixSet;
+    List<String> zone1 = new ArrayList<>(3000);
+    List<String> zone2 = new ArrayList<>(3000);
 
 
     public DrawThread(SurfaceHolder surfaceHolder, Resources resources, QuadrateItem[][] matrixField) {
@@ -101,8 +101,8 @@ public class DrawThread extends Thread {
         int playerY = 0;
 
         // позиция  монстра
-        int monsterX = randInt(0, 39);
-        int monsterY = randInt(0, 19);
+        int monsterX = randInt(1, 38);
+        int monsterY = randInt(1, 18);
         // шаг смещения монстра
         int deltaX = 1;
         int deltaY = 1;
@@ -164,6 +164,7 @@ public class DrawThread extends Thread {
                         playerPath.clear();
 
                         //тут надо найти белые фигуры и закрасить меньшую или меньшие
+
                         zone1.clear();
                         zone2.clear();
                         int i, j;
@@ -197,7 +198,6 @@ public class DrawThread extends Thread {
 
                     }
                 }
-
 
                 //Log.d("run", "playerX=" + playerX + " playerY=" + playerY);
 
@@ -235,7 +235,7 @@ public class DrawThread extends Thread {
 
                             }
                         // рисуем текст
-                        String info = "Lives:" + lives + " Level:" + level + " (" + Math.round(((double) (complete - 116) / 784) * 100) + "/80)";// ������ ������� ����� ������
+                        String info = "Lives:" + lives + " Level:" + level + " (" + Math.round(((double) (complete - 116) / 684) * 100) + "/80)";// ������ ������� ����� ������
                         canvas.drawText(info, 5, 40, textPaint);
                         // рисуем  путь
                         for (int[] p : playerPath) {
@@ -262,43 +262,43 @@ public class DrawThread extends Thread {
 
     private void findNeighbours(int i, int j) {
         if (zone1.size() == 0 && zone2.size() == 0) {
-            zone1.add(i + ";" + j);
+            zone1.add(new StringBuilder().append(i).append(";").append(j).toString());//  i + ";" + j);
             if (matrixField[i - 1][j].color == Color.TRANSPARENT) //check if the top box is partially filled
             {
                 zone1.add((i - 1) + ";" + j);
-                findNeighbours(i - 1, j);
+                //findNeighbours(i - 1, j);
             }
             if (matrixField[i][j + 1].color == Color.TRANSPARENT) //check if the top box is partially filled
             {
                 zone1.add(i + ";" + (j + 1));
-                findNeighbours(i, j + 1);
+                //findNeighbours(i, j + 1);
             }
             if (matrixField[i + 1][j].color == Color.TRANSPARENT) { //check if the top box is partially filled
                 zone1.add((i + 1) + ";" + j);
-                findNeighbours(i + 1, j);
+                //findNeighbours(i + 1, j);
             }
             if (matrixField[i][j - 1].color == Color.TRANSPARENT) { //check if the top box is partially filled
                 zone1.add(i + ";" + (j - 1));
-                findNeighbours(i, j - 1);
+                //findNeighbours(i, j - 1);
             }
         }
         if (zone1.contains(i + ";" + j)) {
             if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone1.contains((i - 1) + ";" + j)) //check if the top box is partially filled
             {
                 zone1.add((i - 1) + ";" + j);
-                findNeighbours(i - 1, j);
+                //findNeighbours(i - 1, j);
             }
             if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone1.contains(i + ";" + (j + 1))) {
                 zone1.add(i + ";" + (j + 1));
-                findNeighbours(i, j + 1);
+                //findNeighbours(i, j + 1);
             }
             if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone1.contains((i + 1) + ";" + j)) { //check if the top box is partially filled
                 zone1.add((i + 1) + ";" + j);
-                findNeighbours(i + 1, j);
+               //findNeighbours(i + 1, j);
             }
             if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone1.contains(i + ";" + (j - 1))) { //check if the top box is partially filled
                 zone1.add(i + ";" + (j - 1));
-                findNeighbours(i, j - 1);
+                //findNeighbours(i, j - 1);
             }
         }
         if (!zone1.contains(i + ";" + j)) {
@@ -306,19 +306,19 @@ public class DrawThread extends Thread {
             if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone2.contains((i - 1) + ";" + j)) //check if the top box is partially filled
             {
                 zone2.add((i - 1) + ";" + j);
-                findNeighbours(i - 1, j);
+                //findNeighbours(i - 1, j);
             }
             if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone2.contains(i + ";" + (j + 1))) {
                 zone2.add(i + ";" + (j + 1));
-                findNeighbours(i, j + 1);
+                //findNeighbours(i, j + 1);
             }
             if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone2.contains((i + 1) + ";" + j)) { //check if the top box is partially filled
                 zone2.add((i + 1) + ";" + j);
-                findNeighbours(i + 1, j);
+               // findNeighbours(i + 1, j);
             }
             if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone2.contains(i + ";" + (j - 1))) { //check if the top box is partially filled
                 zone2.add(i + ";" + (j - 1));
-                findNeighbours(i, j - 1);
+                //findNeighbours(i, j - 1);
             }
         }
     }
