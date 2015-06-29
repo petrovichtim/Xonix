@@ -14,8 +14,9 @@ import android.view.SurfaceHolder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Queue;
 import java.util.Random;
-import java.util.TreeSet;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Created by volodya on 22.06.2015.
@@ -32,8 +33,10 @@ public class DrawThread extends Thread {
     int complete = 0;
     static String playerDirection = "up";
     //TreeSet<int[]> matrixSet;
-    TreeSet<String> zone1 = new TreeSet<>();
-    TreeSet<String> zone2 = new TreeSet<>();
+    // TreeSet<String> zone1 = new TreeSet<>();
+    //TreeSet<String> zone2 = new TreeSet<>();
+    Queue<String> zone1 = new ConcurrentLinkedQueue<>();
+    Queue<String> zone2 = new ConcurrentLinkedQueue<>();
 
 
     public DrawThread(SurfaceHolder surfaceHolder, Resources resources, QuadrateItem[][] matrixField) {
@@ -60,13 +63,13 @@ public class DrawThread extends Thread {
         Rect myRect = new Rect();
         myRect.set(item.x1, item.y1, item.x2, item.y2);
         // �����
-        Paint greenPaint = new Paint();
+        Paint itemPaint = new Paint();
         // ���� �����
-        greenPaint.setColor(item.color);
+        itemPaint.setColor(item.color);
         // ��� - �������
-        greenPaint.setStyle(Paint.Style.FILL);
+        itemPaint.setStyle(Paint.Style.FILL);
         // ����������� ������ ��������������� ������ �������� ������
-        canvas.drawRect(myRect, greenPaint);
+        canvas.drawRect(myRect, itemPaint);
     }
 
     static int[] addElement(int[] a, int e) {
@@ -101,8 +104,8 @@ public class DrawThread extends Thread {
         int playerY = 0;
 
         // позиция  монстра
-        int monsterX = randInt(1, 38);
-        int monsterY = randInt(1, 18);
+        int monsterX = randInt(2, 38);
+        int monsterY = randInt(2, 18);
         // шаг смещения монстра
         int deltaX = 1;
         int deltaY = 1;
@@ -168,13 +171,14 @@ public class DrawThread extends Thread {
                         zone1.clear();
                         zone2.clear();
                         int i, j;
-                        for (i = 0; i < 40; i++)
-                            for (j = 0; j < 20; j++) {
+                        for (i = 1; i < 39; i++)
+                            for (j = 1; j < 19; j++) {
                                 if (matrixField[i][j].color == Color.TRANSPARENT)
                                     findNeighbours(i, j);
+
                             }
-                        Log.d("run", "zone1=" + zone1);
-                        Log.d("run", "zone2=" + zone2);
+                        Log.d("DrawThread", "zone1=" + zone1);
+                        Log.d("DrawThread", "zone2=" + zone2);
                         if (zone1.size() < zone2.size() && !zone1.contains(monsterX + ";" + monsterY))
                             for (String s : zone1) {
                                 String[] p = s.split(";");
@@ -199,7 +203,7 @@ public class DrawThread extends Thread {
                     }
                 }
 
-                //Log.d("run", "playerX=" + playerX + " playerY=" + playerY);
+                //Log.d("DrawThread", "playerX=" + playerX + " playerY=" + playerY);
 
                 player = new QuadrateItem(matrixField[playerX][playerY]);
                 player.color = Color.GREEN;
@@ -210,7 +214,7 @@ public class DrawThread extends Thread {
                 deltaX = monsterPos[2];
                 deltaY = monsterPos[3];
 
-                // Log.d("run", "monsterX=" + monsterX + " monsterY=" + monsterY);
+                // Log.d("DrawThread", "monsterX=" + monsterX + " monsterY=" + monsterY);
 
                 monster = new QuadrateItem(matrixField[monsterX][monsterY]);
                 monster.color = Color.RED;
@@ -263,67 +267,69 @@ public class DrawThread extends Thread {
     private void findNeighbours(int i, int j) {
         if (zone1.size() == 0 && zone2.size() == 0) {
             zone1.add(new StringBuilder().append(i).append(";").append(j).toString());//  i + ";" + j);
-            if (matrixField[i - 1][j].color == Color.TRANSPARENT) //слева
-            {
+            if (matrixField[i - 1][j].color == Color.TRANSPARENT) { //слева
                 zone1.add((i - 1) + ";" + j);
-                //findNeighbours(i - 1, j);
             }
-            if (matrixField[i][j + 1].color == Color.TRANSPARENT) //сверху
-            {
+            if (matrixField[i][j + 1].color == Color.TRANSPARENT) { //сверху
                 zone1.add(i + ";" + (j + 1));
-                //findNeighbours(i, j + 1);
             }
             if (matrixField[i + 1][j].color == Color.TRANSPARENT) { //справа
                 zone1.add((i + 1) + ";" + j);
-                //findNeighbours(i + 1, j);
             }
             if (matrixField[i][j - 1].color == Color.TRANSPARENT) { //снизу
                 zone1.add(i + ";" + (j - 1));
-                //findNeighbours(i, j - 1);
             }
-            return;
+
+            for (String s : zone1) {
+                String[] p = s.split(";");
+                // Log.d("zone1 loop", s);
+                findNeighbours(Integer.parseInt(p[0]), Integer.parseInt(p[1]));
+            }
         }
         if (zone1.contains(i + ";" + j)) {
-            if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone1.contains((i - 1) + ";" + j)) //check if the top box is partially filled
-            {
-                zone1.add((i - 1) + ";" + j);
-                //findNeighbours(i - 1, j);
+            if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone1.contains((i - 1) + ";" + j)) {
+                zone1.add((i - 1) + ";" + j); // слева
+            }
+            if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone1.contains((i + 1) + ";" + j)) {
+                zone1.add((i + 1) + ";" + j); //справа
             }
             if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone1.contains(i + ";" + (j + 1))) {
-                zone1.add(i + ";" + (j + 1));
-                //findNeighbours(i, j + 1);
+                zone1.add(i + ";" + (j + 1)); // снизу
             }
-            if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone1.contains((i + 1) + ";" + j)) { //check if the top box is partially filled
-                zone1.add((i + 1) + ";" + j);
-                //findNeighbours(i + 1, j);
+            if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone1.contains(i + ";" + (j - 1))) {
+                zone1.add(i + ";" + (j - 1)); // сверху
             }
-            if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone1.contains(i + ";" + (j - 1))) { //check if the top box is partially filled
-                zone1.add(i + ";" + (j - 1));
-                //findNeighbours(i, j - 1);
-            }
-            return;
+
         }
-        if (!zone1.contains(i + ";" + j)) {
-            zone2.add(i + ";" + j);
-            if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone2.contains((i - 1) + ";" + j)) //check if the top box is partially filled
-            {
-                zone2.add((i - 1) + ";" + j);
-                //findNeighbours(i - 1, j);
+
+        if (!zone1.contains(i + ";" + j))
+
+        {
+            if (!zone2.contains(i + ";" + j)) {
+                zone2.add(i + ";" + j);
+
+                for (String s : zone2) {
+                    String[] p = s.split(";");
+                    // Log.d("zone2 loop", s);
+                    findNeighbours(Integer.parseInt(p[0]), Integer.parseInt(p[1]));
+                }
+            }
+
+            if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone2.contains((i - 1) + ";" + j)) {
+                zone2.add((i - 1) + ";" + j);//слева
             }
             if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone2.contains(i + ";" + (j + 1))) {
-                zone2.add(i + ";" + (j + 1));
-                //findNeighbours(i, j + 1);
+                zone2.add(i + ";" + (j + 1)); //снизу
             }
             if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone2.contains((i + 1) + ";" + j)) { //check if the top box is partially filled
-                zone2.add((i + 1) + ";" + j);
-                // findNeighbours(i + 1, j);
+                zone2.add((i + 1) + ";" + j);//справа
             }
             if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone2.contains(i + ";" + (j - 1))) { //check if the top box is partially filled
-                zone2.add(i + ";" + (j - 1));
-                //findNeighbours(i, j - 1);
+                zone2.add(i + ";" + (j - 1));//сверху
             }
-            return;
+
         }
+
     }
 
 
