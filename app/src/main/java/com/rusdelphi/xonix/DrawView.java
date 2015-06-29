@@ -18,6 +18,7 @@ public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
         getHolder().addCallback(this);
     }
 
+
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                int height) {
@@ -61,7 +62,7 @@ public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        int indent = 5;
+        int indent = Tools.dpToPx(5); // отступ между элементами
         int side = (getWidth() / 40) - indent;
         //Log.d("DrawView", "side=" + side);
         int startY = (getHeight() - (side + indent) * 20) / 2;

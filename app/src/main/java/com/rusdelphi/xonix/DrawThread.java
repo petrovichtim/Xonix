@@ -15,7 +15,6 @@ import android.view.SurfaceHolder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Queue;
-import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -32,10 +31,7 @@ public class DrawThread extends Thread {
     int level = 1;
     int complete = 0;
     static String playerDirection = "up";
-    //TreeSet<int[]> matrixSet;
-    // TreeSet<String> zone1 = new TreeSet<>();
-    //TreeSet<String> zone2 = new TreeSet<>();
-    Queue<String> zone1 = new ConcurrentLinkedQueue<>();
+    Queue<String> zone1 = new ConcurrentLinkedQueue<>(); // В ОЧЕРЕДЬ!!!
     Queue<String> zone2 = new ConcurrentLinkedQueue<>();
 
 
@@ -78,18 +74,6 @@ public class DrawThread extends Thread {
         return a;
     }
 
-    public static int randInt(int min, int max) {
-
-        // NOTE: Usually this should be a field rather than a method
-        // variable so that it is not re-seeded every call.
-        Random rand = new Random();
-
-        // nextInt is normally exclusive of the top value,
-        // so add 1 to make it inclusive
-        int randomNum = rand.nextInt((max - min) + 1) + min;
-
-        return randomNum;
-    }
 
     @Override
     public void run() {
@@ -97,15 +81,18 @@ public class DrawThread extends Thread {
         Paint textPaint = new Paint();
         textPaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
         textPaint.setAntiAlias(true);
-        textPaint.setTextSize(40);
+        textPaint.setTextSize(Tools.spToPixels(18));
         textPaint.setColor(Color.GREEN);
         // позиция игрока
         int playerX = 0;
         int playerY = 0;
 
+        String[] testFillTime = {"right", "right", "right", "right", "down", "down", "down", "down", "left", "left", "left", "left"};
+        int testIndex = 0;
+
         // позиция  монстра
-        int monsterX = randInt(2, 38);
-        int monsterY = randInt(2, 18);
+        int monsterX = Tools.randInt(2, 37);
+        int monsterY = Tools.randInt(2, 17);
         // шаг смещения монстра
         int deltaX = 1;
         int deltaY = 1;
@@ -125,9 +112,14 @@ public class DrawThread extends Thread {
             // ����������� �������� �������
             long now = System.currentTimeMillis();
             long elapsedTime = now - prevTime;
-            if (elapsedTime > 100) {
+            if (elapsedTime > 500) {
 
                 prevTime = now;
+                // тест
+                if (testIndex < 11)
+                    playerDirection = testFillTime[testIndex];
+                testIndex++;
+
                 //matrix.preRotate(2.0f, picture.getWidth() / 2, picture.getHeight() / 2);
                 if (playerDirection.equals("right")) {
                     playerX += 1;
@@ -156,18 +148,16 @@ public class DrawThread extends Thread {
                     playerPath.add(new int[]{playerX, playerY});
                 // int[] polyX = new int[0], polyY = new int[0];
                 // если  путь больше двух, то заполняем путь
+
                 if (playerPath.size() > 1) {
                     if (matrixField[playerX][playerY].color == Color.BLUE) {
                         // закрашиваем  путь
-                        for (int[] p : playerPath) {
+                        for (int[] p : playerPath)
                             matrixField[p[0]][p[1]].color = Color.BLUE;
-                        }
-
 
                         playerPath.clear();
-
                         //тут надо найти белые фигуры и закрасить меньшую или меньшие
-
+                        long fillTime = System.currentTimeMillis();
                         zone1.clear();
                         zone2.clear();
                         int i, j;
@@ -175,35 +165,24 @@ public class DrawThread extends Thread {
                             for (j = 1; j < 19; j++) {
                                 if (matrixField[i][j].color == Color.TRANSPARENT)
                                     findNeighbours(i, j);
-
                             }
-                        Log.d("DrawThread", "zone1=" + zone1);
-                        Log.d("DrawThread", "zone2=" + zone2);
-                        if (zone1.size() < zone2.size() && !zone1.contains(monsterX + ";" + monsterY))
-                            for (String s : zone1) {
-                                String[] p = s.split(";");
-                                matrixField[Integer.parseInt(p[0])][Integer.parseInt(p[1])].color = Color.BLUE;
-                            }
-                        if (zone1.size() < zone2.size() && zone1.contains(monsterX + ";" + monsterY))
+                        //  Log.d("DrawThread", "zone1=" + zone1);
+                        // Log.d("DrawThread", "zone2=" + zone2);
+                        if (zone1.contains(monsterX + ";" + monsterY))
                             for (String s : zone2) {
                                 String[] p = s.split(";");
                                 matrixField[Integer.parseInt(p[0])][Integer.parseInt(p[1])].color = Color.BLUE;
                             }
-                        if (zone1.size() > zone2.size() && !zone1.contains(monsterX + ";" + monsterY))
+                        else
                             for (String s : zone1) {
                                 String[] p = s.split(";");
                                 matrixField[Integer.parseInt(p[0])][Integer.parseInt(p[1])].color = Color.BLUE;
                             }
-                        if (zone1.size() > zone2.size() && zone1.contains(monsterX + ";" + monsterY))
-                            for (String s : zone2) {
-                                String[] p = s.split(";");
-                                matrixField[Integer.parseInt(p[0])][Integer.parseInt(p[1])].color = Color.BLUE;
-                            }
-
+                        Log.d("DrawThread", "fillTime=" + (System.currentTimeMillis() - fillTime));
                     }
+
                 }
 
-                //Log.d("DrawThread", "playerX=" + playerX + " playerY=" + playerY);
 
                 player = new QuadrateItem(matrixField[playerX][playerY]);
                 player.color = Color.GREEN;
@@ -239,8 +218,9 @@ public class DrawThread extends Thread {
 
                             }
                         // рисуем текст
-                        String info = "Lives:" + lives + " Level:" + level + " (" + Math.round(((double) (complete - 116) / 684) * 100) + "/80)";// ������ ������� ����� ������
-                        canvas.drawText(info, 5, 40, textPaint);
+                        String info = "Lives:" + lives + " Level:" + level + " (" + Math.round(((double) (complete - 116) / 684) * 100) + "/80%)";// ������ ������� ����� ������
+
+                        canvas.drawText(info, Tools.dpToPx(5), Tools.spToPixels(18), textPaint);
                         // рисуем  путь
                         for (int[] p : playerPath) {
                             QuadrateItem path = new QuadrateItem(matrixField[p[0]][p[1]]);
@@ -265,20 +245,27 @@ public class DrawThread extends Thread {
     }
 
     private void findNeighbours(int i, int j) {
+        String current = new StringBuilder().append(i).append(";").append(j).toString();
+        String left = new StringBuilder().append(i - 1).append(";").append(j).toString();
+        String right = new StringBuilder().append(i + 1).append(";").append(j).toString();
+        String top = new StringBuilder().append(i).append(";").append(j - 1).toString();
+        String down = new StringBuilder().append(i).append(";").append(j + 1).toString();
+
+
         if (zone1.size() == 0 && zone2.size() == 0) {
-            zone1.add(new StringBuilder().append(i).append(";").append(j).toString());//  i + ";" + j);
-            if (matrixField[i - 1][j].color == Color.TRANSPARENT) { //слева
-                zone1.add((i - 1) + ";" + j);
-            }
-            if (matrixField[i][j + 1].color == Color.TRANSPARENT) { //сверху
-                zone1.add(i + ";" + (j + 1));
-            }
-            if (matrixField[i + 1][j].color == Color.TRANSPARENT) { //справа
-                zone1.add((i + 1) + ";" + j);
-            }
-            if (matrixField[i][j - 1].color == Color.TRANSPARENT) { //снизу
-                zone1.add(i + ";" + (j - 1));
-            }
+            zone1.add(current);//  i + ";" + j);
+            if (matrixField[i - 1][j].color == Color.TRANSPARENT) //слева
+                zone1.add(left);
+
+            if (matrixField[i + 1][j].color == Color.TRANSPARENT)  //справа
+                zone1.add(right);
+
+            if (matrixField[i][j + 1].color == Color.TRANSPARENT)  //снизу
+                zone1.add(down);
+
+            if (matrixField[i][j - 1].color == Color.TRANSPARENT) // сверху
+                zone1.add(top);
+
 
             for (String s : zone1) {
                 String[] p = s.split(";");
@@ -286,27 +273,26 @@ public class DrawThread extends Thread {
                 findNeighbours(Integer.parseInt(p[0]), Integer.parseInt(p[1]));
             }
         }
-        if (zone1.contains(i + ";" + j)) {
-            if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone1.contains((i - 1) + ";" + j)) {
-                zone1.add((i - 1) + ";" + j); // слева
-            }
-            if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone1.contains((i + 1) + ";" + j)) {
-                zone1.add((i + 1) + ";" + j); //справа
-            }
-            if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone1.contains(i + ";" + (j + 1))) {
-                zone1.add(i + ";" + (j + 1)); // снизу
-            }
-            if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone1.contains(i + ";" + (j - 1))) {
-                zone1.add(i + ";" + (j - 1)); // сверху
-            }
+        if (zone1.contains(current)) {
+            if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone1.contains(left))
+                zone1.add(left); // слева
+
+            if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone1.contains(right))
+                zone1.add(right); //справа
+
+            if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone1.contains(down))
+                zone1.add(down);
+
+            if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone1.contains(top))
+                zone1.add(top);
 
         }
 
-        if (!zone1.contains(i + ";" + j))
+        if (!zone1.contains(current))
 
         {
-            if (!zone2.contains(i + ";" + j)) {
-                zone2.add(i + ";" + j);
+            if (!zone2.contains(current)) {
+                zone2.add(current);
 
                 for (String s : zone2) {
                     String[] p = s.split(";");
@@ -315,18 +301,19 @@ public class DrawThread extends Thread {
                 }
             }
 
-            if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone2.contains((i - 1) + ";" + j)) {
-                zone2.add((i - 1) + ";" + j);//слева
-            }
-            if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone2.contains(i + ";" + (j + 1))) {
-                zone2.add(i + ";" + (j + 1)); //снизу
-            }
-            if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone2.contains((i + 1) + ";" + j)) { //check if the top box is partially filled
-                zone2.add((i + 1) + ";" + j);//справа
-            }
-            if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone2.contains(i + ";" + (j - 1))) { //check if the top box is partially filled
-                zone2.add(i + ";" + (j - 1));//сверху
-            }
+            if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone2.contains(left))
+                zone2.add(left);//слева
+
+            if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone2.contains(right))
+                zone2.add(right);//справа
+
+            if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone2.contains(down))
+                zone2.add(down);
+
+
+            if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone2.contains(top))
+                zone2.add(top);
+
 
         }
 
