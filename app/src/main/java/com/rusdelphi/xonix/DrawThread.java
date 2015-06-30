@@ -285,11 +285,9 @@ public class DrawThread extends Thread {
 
             if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone1.contains(top))
                 zone1.add(top);
-
         }
 
         if (!zone1.contains(current))
-
         {
             if (!zone2.contains(current)) {
                 zone2.add(current);
@@ -300,7 +298,6 @@ public class DrawThread extends Thread {
                     findNeighbours(Integer.parseInt(p[0]), Integer.parseInt(p[1]));
                 }
             }
-
             if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone2.contains(left))
                 zone2.add(left);//слева
 
