@@ -62,8 +62,9 @@ public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        Preference prefs = new Preference(getContext()); // получили настройки
         int indent = Tools.dpToPx(5); // отступ между элементами
-        int side = (getWidth() / 40) - indent;
+        int side = (getWidth() / 40) - indent; // размер квадрата
         //Log.d("DrawView", "side=" + side);
         int startY = (getHeight() - (side + indent) * 20) / 2;
         int startX = 5;
@@ -84,7 +85,7 @@ public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
             }
 
 
-        drawThread = new DrawThread(getHolder(), getResources(), matrixField);
+        drawThread = new DrawThread(getHolder(), getResources(), matrixField,prefs.getData(prefs.GAME_SPEED),prefs.getData(prefs.NUMBER_OF_LIFES));
         drawThread.setRunning(true);
         drawThread.start();
     }

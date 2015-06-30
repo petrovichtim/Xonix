@@ -16,5 +16,8 @@ public class MainMenuActivity extends BaseActivity {
     public void onStartGameClick(View v) {
         startActivity(new Intent(this, GameActivity.class));
     }
+    public void onSettingsClick(View v) {
+        startActivity(new Intent(this, SettingsActivity.class));
+    }
 
 }

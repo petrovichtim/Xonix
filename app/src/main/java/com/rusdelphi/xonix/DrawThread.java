@@ -22,12 +22,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class DrawThread extends Thread {
     private final QuadrateItem[][] matrixField;
+    private final int gameSpeed, numberLifes;
     private boolean runFlag = false;
     private SurfaceHolder surfaceHolder;
     private Bitmap picture;
     private Matrix matrix;
     private long prevTime;
-    int lives = 3;
+
     int level = 1;
     int complete = 0;
     static String playerDirection = "up";
@@ -35,9 +36,11 @@ public class DrawThread extends Thread {
     Queue<String> zone2 = new ConcurrentLinkedQueue<>();
 
 
-    public DrawThread(SurfaceHolder surfaceHolder, Resources resources, QuadrateItem[][] matrixField) {
+    public DrawThread(SurfaceHolder surfaceHolder, Resources resources, QuadrateItem[][] matrixField, int gameSpeed, int numberLifes) {
         this.surfaceHolder = surfaceHolder;
         this.matrixField = matrixField;
+        this.gameSpeed = gameSpeed;
+        this.numberLifes = numberLifes;
 
         // загружаем картинку, которую будем отрисовывать
         picture = BitmapFactory.decodeResource(resources, R.drawable.stoimost);
@@ -58,13 +61,9 @@ public class DrawThread extends Thread {
     public void drawRect(Canvas canvas, QuadrateItem item) {
         Rect myRect = new Rect();
         myRect.set(item.x1, item.y1, item.x2, item.y2);
-        // �����
         Paint itemPaint = new Paint();
-        // ���� �����
         itemPaint.setColor(item.color);
-        // ��� - �������
         itemPaint.setStyle(Paint.Style.FILL);
-        // ����������� ������ ��������������� ������ �������� ������
         canvas.drawRect(myRect, itemPaint);
     }
 
@@ -112,13 +111,13 @@ public class DrawThread extends Thread {
             // ����������� �������� �������
             long now = System.currentTimeMillis();
             long elapsedTime = now - prevTime;
-            if (elapsedTime > 500) {
+            if (elapsedTime > 1000 / gameSpeed) {
 
                 prevTime = now;
                 // тест
-                if (testIndex < 11)
-                    playerDirection = testFillTime[testIndex];
-                testIndex++;
+//                if (testIndex < 11)
+//                    playerDirection = testFillTime[testIndex];
+//                testIndex++;
 
                 //matrix.preRotate(2.0f, picture.getWidth() / 2, picture.getHeight() / 2);
                 if (playerDirection.equals("right")) {
@@ -218,7 +217,7 @@ public class DrawThread extends Thread {
 
                             }
                         // рисуем текст
-                        String info = "Lives:" + lives + " Level:" + level + " (" + Math.round(((double) (complete - 116) / 684) * 100) + "/80%)";// ������ ������� ����� ������
+                        String info = "Lives:" + numberLifes + " Level:" + level + " (" + Math.round(((double) (complete - 116) / 684) * 100) + "/80%)";// ������ ������� ����� ������
 
                         canvas.drawText(info, Tools.dpToPx(5), Tools.spToPixels(18), textPaint);
                         // рисуем  путь
@@ -256,16 +255,12 @@ public class DrawThread extends Thread {
             zone1.add(current);//  i + ";" + j);
             if (matrixField[i - 1][j].color == Color.TRANSPARENT) //слева
                 zone1.add(left);
-
             if (matrixField[i + 1][j].color == Color.TRANSPARENT)  //справа
                 zone1.add(right);
-
             if (matrixField[i][j + 1].color == Color.TRANSPARENT)  //снизу
                 zone1.add(down);
-
             if (matrixField[i][j - 1].color == Color.TRANSPARENT) // сверху
                 zone1.add(top);
-
 
             for (String s : zone1) {
                 String[] p = s.split(";");
@@ -276,19 +271,15 @@ public class DrawThread extends Thread {
         if (zone1.contains(current)) {
             if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone1.contains(left))
                 zone1.add(left); // слева
-
             if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone1.contains(right))
                 zone1.add(right); //справа
-
             if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone1.contains(down))
                 zone1.add(down);
-
             if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone1.contains(top))
                 zone1.add(top);
         }
 
-        if (!zone1.contains(current))
-        {
+        if (!zone1.contains(current)) {
             if (!zone2.contains(current)) {
                 zone2.add(current);
 
@@ -300,18 +291,12 @@ public class DrawThread extends Thread {
             }
             if (matrixField[i - 1][j].color == Color.TRANSPARENT && !zone2.contains(left))
                 zone2.add(left);//слева
-
             if (matrixField[i + 1][j].color == Color.TRANSPARENT && !zone2.contains(right))
                 zone2.add(right);//справа
-
             if (matrixField[i][j + 1].color == Color.TRANSPARENT && !zone2.contains(down))
                 zone2.add(down);
-
-
             if (matrixField[i][j - 1].color == Color.TRANSPARENT && !zone2.contains(top))
                 zone2.add(top);
-
-
         }
 
     }
