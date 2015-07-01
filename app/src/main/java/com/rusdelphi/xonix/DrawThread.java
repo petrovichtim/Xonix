@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Created by volodya on 22.06.2015.
  */
 public class DrawThread extends Thread {
-    private final QuadrateItem[][] matrixField;
-    private final int gameSpeed;
+    private QuadrateItem[][] matrixField;
+    private int gameSpeed;
     private int numberLifes;
     private boolean runFlag = false;
     private SurfaceHolder surfaceHolder;
@@ -41,6 +41,7 @@ public class DrawThread extends Thread {
     public DrawThread(SurfaceHolder surfaceHolder, Resources resources, QuadrateItem[][] matrixField, int gameSpeed, int numberLifes, Activity parent) {
         this.surfaceHolder = surfaceHolder;
         this.matrixField = matrixField;
+
         this.gameSpeed = gameSpeed;
         this.numberLifes = numberLifes;
         this.parent = parent;
@@ -74,6 +75,19 @@ public class DrawThread extends Thread {
         a[a.length - 1] = e;
         return a;
     }
+
+    public void clearMatrixfield() {
+        int i, j;
+        for (i = 0; i < 40; i++)
+            for (j = 0; j < 20; j++) {
+
+                if (i == 0 || i == 39 || j == 0 || j == 19)
+                    matrixField[i][j].color = Color.BLUE;
+                else
+                    matrixField[i][j].color = Color.TRANSPARENT;
+            }
+    }
+
 
     public static boolean isInList(
             final List<int[]> list, final int[] candidate) {
@@ -259,8 +273,11 @@ public class DrawThread extends Thread {
                                     complete++;
 
                             }
+                        long completeFields = Math.round(((double) (complete - 116) / 684) * 100);
+
+
                         // рисуем текст
-                        String info = "Lives:" + numberLifes + " Level:" + level + " (" + Math.round(((double) (complete - 116) / 684) * 100) + "/80%)";// ������ ������� ����� ������
+                        String info = "Lives:" + numberLifes + " Level:" + level + " (" + completeFields + "/80%)";// ������ ������� ����� ������
 
                         canvas.drawText(info, Tools.dpToPx(5), Tools.spToPixels(18), textPaint);
                         // рисуем  путь
@@ -273,6 +290,18 @@ public class DrawThread extends Thread {
                         drawRect(canvas, player);
                         //рисуем монстра
                         drawRect(canvas, monster);
+
+                        // проверка на окончание уровня
+                        if (completeFields > 80) {
+                            level++; // увеличили уровень
+                            gameSpeed++; //увеличили скорость
+                            playerPath.clear();
+                            playerX = 0;
+                            playerY = 0;
+                            complete = 0;
+                            clearMatrixfield();
+
+                        }
 
                         // canvas.drawBitmap(picture, matrix, null);
                     }
