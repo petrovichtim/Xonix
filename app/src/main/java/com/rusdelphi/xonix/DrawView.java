@@ -1,5 +1,6 @@
 package com.rusdelphi.xonix;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.view.MotionEvent;
@@ -12,6 +13,7 @@ public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
     private QuadrateItem[][] matrixField = new QuadrateItem[40][20];
     private float x1, x2;
     private float y1, y2;
+
 
     public DrawView(Context context) {
         super(context);
@@ -84,8 +86,8 @@ public class DrawView extends SurfaceView implements SurfaceHolder.Callback {
                     matrixField[i][j] = new QuadrateItem(x1, y1, x2, y2, Color.TRANSPARENT);
             }
 
-
-        drawThread = new DrawThread(getHolder(), getResources(), matrixField,prefs.getData(prefs.GAME_SPEED),prefs.getData(prefs.NUMBER_OF_LIFES));
+        Activity activity = (Activity) getContext();
+        drawThread = new DrawThread(getHolder(), getResources(), matrixField,prefs.getData(prefs.GAME_SPEED),prefs.getData(prefs.NUMBER_OF_LIFES),activity);
         drawThread.setRunning(true);
         drawThread.start();
     }

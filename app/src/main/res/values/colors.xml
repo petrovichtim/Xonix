@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="window_green">#009587</color>
+    <color name="window_red">#F79999</color>
+    <color name="window_blue">#00BBD3</color>
+</resources>

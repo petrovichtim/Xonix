@@ -1,5 +1,6 @@
 package com.rusdelphi.xonix;
 
+import android.app.Activity;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,11 +10,11 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -22,13 +23,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class DrawThread extends Thread {
     private final QuadrateItem[][] matrixField;
-    private final int gameSpeed, numberLifes;
+    private final int gameSpeed;
+    private int numberLifes;
     private boolean runFlag = false;
     private SurfaceHolder surfaceHolder;
     private Bitmap picture;
     private Matrix matrix;
     private long prevTime;
-
+    private static Activity parent;
     int level = 1;
     int complete = 0;
     static String playerDirection = "up";
@@ -36,12 +38,12 @@ public class DrawThread extends Thread {
     Queue<String> zone2 = new ConcurrentLinkedQueue<>();
 
 
-    public DrawThread(SurfaceHolder surfaceHolder, Resources resources, QuadrateItem[][] matrixField, int gameSpeed, int numberLifes) {
+    public DrawThread(SurfaceHolder surfaceHolder, Resources resources, QuadrateItem[][] matrixField, int gameSpeed, int numberLifes, Activity parent) {
         this.surfaceHolder = surfaceHolder;
         this.matrixField = matrixField;
         this.gameSpeed = gameSpeed;
         this.numberLifes = numberLifes;
-
+        this.parent = parent;
         // загружаем картинку, которую будем отрисовывать
         picture = BitmapFactory.decodeResource(resources, R.drawable.stoimost);
 
@@ -73,6 +75,16 @@ public class DrawThread extends Thread {
         return a;
     }
 
+    public static boolean isInList(
+            final List<int[]> list, final int[] candidate) {
+
+        for (final int[] item : list) {
+            if (Arrays.equals(item, candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public void run() {
@@ -96,7 +108,7 @@ public class DrawThread extends Thread {
         int deltaX = 1;
         int deltaY = 1;
         // траектория  игрока
-        ArrayList<int[]> playerPath = new ArrayList<>();
+        List<int[]> playerPath = new ArrayList<>();
 
 
         QuadrateItem player = new QuadrateItem(matrixField[playerX][playerY]);
@@ -141,6 +153,23 @@ public class DrawThread extends Thread {
                     if (playerY < 0)
                         playerY = 0;
                 }
+                // если пересекается собственный путь, то уменьшаем число жизней
+                if (isInList(playerPath, new int[]{playerX, playerY})) {
+                    numberLifes -= 1;
+                    playerX = 0;
+                    playerY = 0;
+                    playerPath.clear();
+                    if (numberLifes < 0) {
+                        runFlag = false;
+                        parent.runOnUiThread(new Runnable() {
+                            public void run() {
+                                GameActivity.showGameOver();
+                            }
+                        });
+                    } else continue;
+                }
+
+
                 // если следующий шаг по пустому полю, то начинаем запись
 
                 if (matrixField[playerX][playerY].color != Color.BLUE)
@@ -156,7 +185,7 @@ public class DrawThread extends Thread {
 
                         playerPath.clear();
                         //тут надо найти белые фигуры и закрасить меньшую или меньшие
-                        long fillTime = System.currentTimeMillis();
+                        //long fillTime = System.currentTimeMillis();
                         zone1.clear();
                         zone2.clear();
                         int i, j;
@@ -177,7 +206,7 @@ public class DrawThread extends Thread {
                                 String[] p = s.split(";");
                                 matrixField[Integer.parseInt(p[0])][Integer.parseInt(p[1])].color = Color.BLUE;
                             }
-                        Log.d("DrawThread", "fillTime=" + (System.currentTimeMillis() - fillTime));
+                        // Log.d("DrawThread", "fillTime=" + (System.currentTimeMillis() - fillTime));
                     }
 
                 }
@@ -192,6 +221,20 @@ public class DrawThread extends Thread {
                 deltaX = monsterPos[2];
                 deltaY = monsterPos[3];
 
+                if (isInList(playerPath, new int[]{monsterX, monsterY})) {
+                    numberLifes -= 1;
+                    playerX = 0;
+                    playerY = 0;
+                    playerPath.clear();
+                    if (numberLifes < 0) {
+                        runFlag = false;
+                        parent.runOnUiThread(new Runnable() {
+                            public void run() {
+                                GameActivity.showGameOver();
+                            }
+                        });
+                    } else continue;
+                }
                 // Log.d("DrawThread", "monsterX=" + monsterX + " monsterY=" + monsterY);
 
                 monster = new QuadrateItem(matrixField[monsterX][monsterY]);
@@ -242,6 +285,7 @@ public class DrawThread extends Thread {
             }
         }
     }
+
 
     private void findNeighbours(int i, int j) {
         String current = new StringBuilder().append(i).append(";").append(j).toString();
