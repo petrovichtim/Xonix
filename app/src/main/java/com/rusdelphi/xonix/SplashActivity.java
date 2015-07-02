@@ -19,7 +19,7 @@ public class SplashActivity extends BaseActivity {
                 startActivity(new Intent(SplashActivity.this, MainMenuActivity.class));
                 finish();
             }
-        }, 5000);
+        }, 2000);
 
     }
 
