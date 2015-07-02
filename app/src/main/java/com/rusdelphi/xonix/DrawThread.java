@@ -103,11 +103,15 @@ public class DrawThread extends Thread {
     @Override
     public void run() {
         Canvas canvas;
+        // загрузили свой шрифт
+        Typeface tf = Typeface.createFromAsset(parent.getAssets(),
+                "Dots.ttf");
         Paint textPaint = new Paint();
-        textPaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
+        //textPaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
         textPaint.setAntiAlias(true);
-        textPaint.setTextSize(Tools.spToPixels(18));
+        textPaint.setTextSize(Tools.spToPixels(15));
         textPaint.setColor(Color.GREEN);
+        textPaint.setTypeface(tf);
         // позиция игрока
         int playerX = 0;
         int playerY = 0;
@@ -277,7 +281,7 @@ public class DrawThread extends Thread {
 
 
                         // рисуем текст
-                        String info = "Lives:" + numberLifes + " Level:" + level + " (" + completeFields + "/80%)";// ������ ������� ����� ������
+                        String info = "Количество жизней:" + numberLifes + " Уровень:" + level + " (" + completeFields + "/80%)";// ������ ������� ����� ������
 
                         canvas.drawText(info, Tools.dpToPx(5), Tools.spToPixels(18), textPaint);
                         // рисуем  путь
