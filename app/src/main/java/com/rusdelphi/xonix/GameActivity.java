@@ -8,9 +8,8 @@ import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.TextView;
+import android.widget.RelativeLayout;
 
 
 public class GameActivity extends BaseActivity {
@@ -35,9 +34,9 @@ public class GameActivity extends BaseActivity {
         int width = dimension.widthPixels;
         int height = dimension.heightPixels;
         if (width < height)
-            mSidePopup = (int) (width * 0.7);
+            mSidePopup = (int) (width * 0.8);
         else
-            mSidePopup = (int) (height * 0.7);
+            mSidePopup = (int) (height * 0.8);
 
     }
 
@@ -53,13 +52,8 @@ public class GameActivity extends BaseActivity {
                 mSidePopup,
                 mSidePopup);
         mPopupWindow.setAnimationStyle(android.R.style.Animation_Dialog);
-        LinearLayout ll = (LinearLayout) popupView.findViewById(R.id.PopUp);
-        TextView tv_message = (TextView) popupView.findViewById(R.id.tv_message);
-
-        ll.setBackgroundColor(res.getColor(R.color.window_green));
-        tv_message.setText(R.string.message_game_over);
-
-        ll.setOnClickListener(new View.OnClickListener() {
+        RelativeLayout rl = (RelativeLayout) popupView.findViewById(R.id.PopUp);
+        rl.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {

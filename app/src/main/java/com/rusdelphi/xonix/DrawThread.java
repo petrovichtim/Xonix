@@ -244,7 +244,7 @@ public class DrawThread extends Thread {
                     playerX = 0;
                     playerY = 0;
                     playerPath.clear();
-                    if (numberLifes < 0) {
+                    if (numberLifes < 1) {
                         runFlag = false;
                         parent.runOnUiThread(new Runnable() {
                             public void run() {
@@ -281,7 +281,7 @@ public class DrawThread extends Thread {
 
 
                         // рисуем текст
-                        String info = "Количество жизней:" + numberLifes + " Уровень:" + level + " (" + completeFields + "/80%)";// ������ ������� ����� ������
+                        String info = parent.getString(R.string.life_count) + numberLifes + parent.getString(R.string.level) + level + " (" + completeFields + "/80%)";// ������ ������� ����� ������
 
                         canvas.drawText(info, Tools.dpToPx(5), Tools.spToPixels(18), textPaint);
                         // рисуем  путь
