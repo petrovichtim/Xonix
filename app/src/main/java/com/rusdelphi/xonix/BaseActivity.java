@@ -21,7 +21,10 @@ public class BaseActivity extends Activity {
 
         // задали портретную ориентацию
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        // задали анимацию при запуске активности
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
 
     }
+
 
 }
