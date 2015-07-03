@@ -47,8 +47,9 @@
         android:layout_above="@+id/button"
         android:layout_centerHorizontal="true"
         android:text="@string/app_name"
-        android:textSize="40sp"
-        customfont:fontName="Dots.ttf" />
+        android:textSize="80sp"
+        customfont:fontName="Dots.ttf"
+        android:textColor="@color/window_blue" />
 
 
 </RelativeLayout>

@@ -15,9 +15,9 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:text="@string/app_name"
-        android:textSize="40sp"
+        android:textSize="80sp"
         android:textStyle="bold"
-
-        customfont:fontName="Dots.ttf" />
+        customfont:fontName="Dots.ttf"
+        android:textColor="@color/window_blue" />
 
 </RelativeLayout>
