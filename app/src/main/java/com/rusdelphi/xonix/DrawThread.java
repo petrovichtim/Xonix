@@ -409,8 +409,6 @@ public class DrawThread extends Thread {
         }
 
 
-        int[] pos = {monsterX, monsterY, deltaX, deltaY};
-
-        return pos;
+        return new int[]{monsterX, monsterY, deltaX, deltaY};
     }
 }
