@@ -2,7 +2,6 @@ package com.rusdelphi.xonix;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
@@ -17,7 +16,6 @@ public class GameActivity extends BaseActivity {
     private static DrawView mDrawView;
     private static PopupWindow mPopupWindow;
     private static Context ctx;
-    private static Resources res;
     private static Activity self;
     static int mSidePopup;
 
@@ -25,7 +23,6 @@ public class GameActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         self = this;
-        res = getResources();
         ctx = this;
         mDrawView = new DrawView(this);
         setContentView(mDrawView);
